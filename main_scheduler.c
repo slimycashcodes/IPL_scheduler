@@ -20,8 +20,6 @@ typedef struct {
     char time[10];
 } Match;
 
-// Removed duplicate definition of PlayoffTeam as it is already defined in playoffs.h
-
 typedef struct {
     char team[20];
     int matchesPlayed, wins, losses, points;
@@ -29,13 +27,11 @@ typedef struct {
     float netRunRate;
 } PointsTable;
 
-// Global Variables
 Team teams[MAX_TEAMS];
 Match matches[MAX_MATCHES];
 PointsTable points[MAX_TEAMS];
 int matchCount = 0;
 
-// Function to initialize teams
 void initializeTeams() {
     char *teamNames[MAX_TEAMS] = {"MI", "CSK", "RCB", "KKR", "SRH", "DC", "PBKS", "RR"};
     char *venues[MAX_TEAMS] = {"Mumbai", "Chennai", "Bangalore", "Kolkata", "Hyderabad", "Delhi", "Punjab", "Jaipur"};
@@ -50,7 +46,6 @@ void initializeTeams() {
     }
 }
 
-// Function to generate a round-robin schedule
 void generateSchedule() {
     int day = 1, month = 4;
     int pairs[MAX_TEAMS][MAX_TEAMS] = {0};
@@ -62,14 +57,11 @@ void generateSchedule() {
         int team2 = rand() % MAX_TEAMS;
 
         
-
-        // Ensure a team does not play itself
         if (team1 == team2 || pairs[team1][team2] >= 2) {
             attempt++;
             continue;
         }
 
-        // Ensure teams do not play consecutive matches
         if (matchCount > 0) {
             if (strcmp(teams[team1].name, matches[matchCount-1].team1) == 0 || 
                 strcmp(teams[team1].name, matches[matchCount-1].team2) == 0 ||
@@ -81,31 +73,32 @@ void generateSchedule() {
             }
         }
 
-        // Decide the venue based on previous home venue selection
+
         if (homeVenueUsed[team1][team2] == 0) {
-            // First match: play at team1's home
             strcpy(matches[matchCount].team1, teams[team1].name);
             strcpy(matches[matchCount].team2, teams[team2].name);
             strcpy(matches[matchCount].venue, teams[team1].homeVenue);
-            homeVenueUsed[team1][team2] = 1;  // Mark that team1 hosted this match
+            homeVenueUsed[team1][team2] = 1;  
         } else {
-            // Second match: switch venue to team2's home
             strcpy(matches[matchCount].team1, teams[team2].name);
             strcpy(matches[matchCount].team2, teams[team1].name);
             strcpy(matches[matchCount].venue, teams[team2].homeVenue);
-            homeVenueUsed[team1][team2] = 0;  // Reset for fairness
+            homeVenueUsed[team1][team2] = 0;  
         }
 
-        // Set match date and time
         sprintf(matches[matchCount].date, "2025-%02d-%02d", month, day);
-        sprintf(matches[matchCount].time, (matchCount % 7 == 0) ? "3:30 PM" : "7:30 PM");
+        if(matchCount%7==0){
+            sprintf(matches[matchCount].time,"3:30 PM");
+            day--;
+        }
+        else{
+            sprintf(matches[matchCount].time,"7:30 PM");
+        }
 
-        // Update tracking
         pairs[team1][team2]++;
         pairs[team2][team1]++;
         matchCount++;
 
-        // Advance the date
         if (++day > 30) {
             day = 1;
             month++;
@@ -113,7 +106,6 @@ void generateSchedule() {
     }
 }
 
-// Function to update points table and NRR
 void updatePointsTable(char winner[], char loser[], int runsWinner, int runsLoser) {
     for (int i = 0; i < MAX_TEAMS; i++) {
         if (strcmp(points[i].team, winner) == 0) {
@@ -132,7 +124,6 @@ void updatePointsTable(char winner[], char loser[], int runsWinner, int runsLose
     }
 }
 
-// Function to calculate Net Run Rate (NRR)
 void calculateNRR() {
     for (int i = 0; i < MAX_TEAMS; i++) {
         if (points[i].matchesPlayed > 0) {
@@ -142,7 +133,6 @@ void calculateNRR() {
     }
 }
 
-// Function to simulate matches
 void simulateMatches() {
     for (int i = 0; i < matchCount; i++) {
         char winner[20], loser[20];
@@ -164,7 +154,6 @@ void simulateMatches() {
     calculateNRR();
 }
 
-// Function to display points table (sorted by points and NRR)
 void displayPointsTable() {
     for (int i = 0; i < MAX_TEAMS - 1; i++) {
         for (int j = 0; j < MAX_TEAMS - i - 1; j++) {
@@ -180,7 +169,7 @@ void displayPointsTable() {
     printf("\n******** Final Points Table ********\n");
     printf("Team\tMP\tW\tL\tPts\tNRR\n");
 
-    PlayoffTeam toppers[MAX_TOPTEAMS]; // Correctly declare the array size
+    PlayoffTeam toppers[MAX_TOPTEAMS]; 
     for (int i = 0; i < MAX_TEAMS; i++) {
         if (i < MAX_TOPTEAMS) {
             strcpy(toppers[i].team, points[i].team);
@@ -190,7 +179,7 @@ void displayPointsTable() {
                points[i].wins, points[i].losses, points[i].points, points[i].netRunRate);
     }
 
-    real(toppers); // Ensure the 'real' function is declared and implemented in playoffs.h or elsewhere
+    real(toppers); 
 }
 
 void displaySchedule() {
@@ -201,7 +190,6 @@ void displaySchedule() {
     }
 }
 
-// Main Function
 int main() {
     srand(time(NULL));
     initializeTeams();
