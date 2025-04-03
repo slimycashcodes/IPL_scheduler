@@ -3,12 +3,17 @@
 #include <time.h>
 #include <string.h>
 
-#define MAX_TEAMS 4
+#ifndef PLAYOFFS_H
+#define PLAYOFFS_H
+
+#define MAX_TOPTEAMS 4
 
 typedef struct {
     char team[20];
     float netRunRate;
 } PlayoffTeam;
+
+#endif // PLAYOFFS_H
 
 // Function to simulate a playoff match
 char* simulateMatch(PlayoffTeam team1, PlayoffTeam team2) {
@@ -33,7 +38,7 @@ void simulatePlayoffs(PlayoffTeam topTeams[]) {
     printf("Winner: %s (Goes to Qualifier 2)\n", eliminatorWinner);
     printf("Loser: %s (Eliminated)\n\n", (strcmp(eliminatorWinner, topTeams[2].team) == 0) ? topTeams[3].team : topTeams[2].team);
 
-    // **Qualifier 2: Qualifier 1 Loser vs Eliminator Winner**
+
     PlayoffTeam teamA = {"", 0}, teamB = {"", 0};
     strcpy(teamA.team, qualifier1Loser);
     strcpy(teamB.team, eliminatorWinner);
@@ -42,7 +47,6 @@ void simulatePlayoffs(PlayoffTeam topTeams[]) {
     strcpy(qualifier2Winner, simulateMatch(teamA, teamB));
     printf("Winner: %s (Advances to Final)\n\n", qualifier2Winner);
 
-    // **Final: Qualifier 1 Winner vs Qualifier 2 Winner**
     PlayoffTeam finalA = {"", 0}, finalB = {"", 0};
     strcpy(finalA.team, qualifier1Winner);
     strcpy(finalB.team, qualifier2Winner);
@@ -53,16 +57,8 @@ void simulatePlayoffs(PlayoffTeam topTeams[]) {
 }
 
 // Main Function
-int main() {
+int real(PlayoffTeam *topTeams) {
     srand(time(NULL));
-
-    // Example top 4 teams (Replace with actual sorted teams from points table)
-    PlayoffTeam topTeams[MAX_TEAMS] = {
-        {"MI", 1.25},
-        {"CSK", 1.10},
-        {"RCB", 0.85},
-        {"KKR", 0.75}
-    };
 
     printf("\n***** IPL Playoffs Simulation *****\n");
     simulatePlayoffs(topTeams);
