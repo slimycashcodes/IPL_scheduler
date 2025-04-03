@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "playoffs.h"
 
 #define MAX_TEAMS 8
 #define MAX_MATCHES 56
@@ -19,6 +20,8 @@ typedef struct {
     char time[10];
 } Match;
 
+// Removed duplicate definition of PlayoffTeam as it is already defined in playoffs.h
+
 typedef struct {
     char team[20];
     int matchesPlayed, wins, losses, points;
@@ -26,11 +29,13 @@ typedef struct {
     float netRunRate;
 } PointsTable;
 
+// Global Variables
 Team teams[MAX_TEAMS];
 Match matches[MAX_MATCHES];
 PointsTable points[MAX_TEAMS];
 int matchCount = 0;
 
+// Function to initialize teams
 void initializeTeams() {
     char *teamNames[MAX_TEAMS] = {"MI", "CSK", "RCB", "KKR", "SRH", "DC", "PBKS", "RR"};
     char *venues[MAX_TEAMS] = {"Mumbai", "Chennai", "Bangalore", "Kolkata", "Hyderabad", "Delhi", "Punjab", "Jaipur"};
@@ -45,6 +50,7 @@ void initializeTeams() {
     }
 }
 
+// Function to generate a round-robin schedule
 void generateSchedule() {
     int day = 1, month = 4;
     int pairs[MAX_TEAMS][MAX_TEAMS] = {0};
@@ -87,6 +93,7 @@ void generateSchedule() {
     }
 }
 
+// Function to update points table and NRR
 void updatePointsTable(char winner[], char loser[], int runsWinner, int runsLoser) {
     for (int i = 0; i < MAX_TEAMS; i++) {
         if (strcmp(points[i].team, winner) == 0) {
@@ -104,6 +111,8 @@ void updatePointsTable(char winner[], char loser[], int runsWinner, int runsLose
         }
     }
 }
+
+// Function to calculate Net Run Rate (NRR)
 void calculateNRR() {
     for (int i = 0; i < MAX_TEAMS; i++) {
         if (points[i].matchesPlayed > 0) {
@@ -113,6 +122,7 @@ void calculateNRR() {
     }
 }
 
+// Function to simulate matches
 void simulateMatches() {
     for (int i = 0; i < matchCount; i++) {
         char winner[20], loser[20];
@@ -133,6 +143,8 @@ void simulateMatches() {
     }
     calculateNRR();
 }
+
+// Function to display points table (sorted by points and NRR)
 void displayPointsTable() {
     for (int i = 0; i < MAX_TEAMS - 1; i++) {
         for (int j = 0; j < MAX_TEAMS - i - 1; j++) {
@@ -147,11 +159,20 @@ void displayPointsTable() {
 
     printf("\n******** Final Points Table ********\n");
     printf("Team\tMP\tW\tL\tPts\tNRR\n");
+
+    PlayoffTeam toppers[MAX_TOPTEAMS]; // Correctly declare the array size
     for (int i = 0; i < MAX_TEAMS; i++) {
+        if (i < MAX_TOPTEAMS) {
+            strcpy(toppers[i].team, points[i].team);
+            toppers[i].netRunRate = points[i].netRunRate;
+        }
         printf("%s\t%d\t%d\t%d\t%d\t%.2f\n", points[i].team, points[i].wins + points[i].losses,
                points[i].wins, points[i].losses, points[i].points, points[i].netRunRate);
     }
+
+    real(toppers); // Ensure the 'real' function is declared and implemented in playoffs.h or elsewhere
 }
+
 void displaySchedule() {
     printf("\n******** IPL Match Schedule ********\n");
     for (int i = 0; i < matchCount; i++) {
@@ -169,5 +190,8 @@ int main() {
     displaySchedule();
     simulateMatches(); 
     displayPointsTable(); 
+    int i;
+    printf("Press 0 to stop .....");
+    scanf("%d",&i);
     return 0;
 }
