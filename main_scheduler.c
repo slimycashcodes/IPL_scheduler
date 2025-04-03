@@ -6,7 +6,7 @@
 #define MAX_TEAMS 8
 #define MAX_MATCHES 56
 
-// Structure Definitions
+
 typedef struct {
     char name[20];
     char homeVenue[30];
@@ -26,13 +26,11 @@ typedef struct {
     float netRunRate;
 } PointsTable;
 
-// Global Variables
 Team teams[MAX_TEAMS];
 Match matches[MAX_MATCHES];
 PointsTable points[MAX_TEAMS];
 int matchCount = 0;
 
-// Function to initialize teams
 void initializeTeams() {
     char *teamNames[MAX_TEAMS] = {"MI", "CSK", "RCB", "KKR", "SRH", "DC", "PBKS", "RR"};
     char *venues[MAX_TEAMS] = {"Mumbai", "Chennai", "Bangalore", "Kolkata", "Hyderabad", "Delhi", "Punjab", "Jaipur"};
@@ -41,95 +39,87 @@ void initializeTeams() {
         strcpy(teams[i].name, teamNames[i]);
         strcpy(teams[i].homeVenue, venues[i]);
         strcpy(points[i].team, teamNames[i]);
-        points[i].matchesPlayed = 0;
-        points[i].wins = 0;
-        points[i].losses = 0;
-        points[i].points = 0;
-        points[i].runsScored = 0;
-        points[i].runsConceded = 0;
+        points[i].matchesPlayed = points[i].wins = points[i].losses = points[i].points = 0;
+        points[i].runsScored = points[i].runsConceded = 0;
         points[i].netRunRate = 0.0;
     }
 }
 
-
-void shuffleTeams(int *teamOrder) {
-    for (int i = MAX_TEAMS - 1; i > 0; i--) {
-        int j = rand() % (i + 1);
-        int temp = teamOrder[i];
-        teamOrder[i] = teamOrder[j];
-        teamOrder[j] = temp;
-    }
-}
-
-// Function to generate a random match schedule
 void generateSchedule() {
-    int teamOrder[MAX_TEAMS];
-    for (int i = 0; i < MAX_TEAMS; i++) teamOrder[i] = i;
-    shuffleTeams(teamOrder);
-    
     int day = 1, month = 4;
-    int used[MAX_TEAMS] = {0};
+    int pairs[MAX_TEAMS][MAX_TEAMS] = {0};
     
-    while (matchCount < MAX_MATCHES) {
-        shuffleTeams(teamOrder);
-        for (int i = 0; i < MAX_TEAMS; i += 2) {
-            if (used[teamOrder[i]] == 0 && used[teamOrder[i + 1]] == 0) {
-                sprintf(matches[matchCount].team1, "%s", teams[teamOrder[i]].name);
-                sprintf(matches[matchCount].team2, "%s", teams[teamOrder[i + 1]].name);
-                sprintf(matches[matchCount].venue, "%s", teams[teamOrder[i]].homeVenue);
-                sprintf(matches[matchCount].date, "2025-%02d-%02d", month, day);
-                sprintf(matches[matchCount].time, (matchCount % 7 == 0) ? "3:30 PM" : "7:30 PM");
-                matchCount++;
-                if (day >= 30) {
-                    month++;
-                    day = 1;
-                }
-                day += 1;
-                used[teamOrder[i]] = 1;
-                used[teamOrder[i + 1]] = 1;
-            }
+    while (matchCount < MAX_TEAMS * (MAX_TEAMS - 1)) {
+        int team1 = rand() % MAX_TEAMS;
+        int team2 = rand() % MAX_TEAMS;
+        
+        if (team1 == team2 || pairs[team1][team2] >= 2) continue;
+        
+        if (matchCount > 0) {
+            if (strcmp(teams[team1].name, matches[matchCount-1].team1) == 0 || 
+                strcmp(teams[team1].name, matches[matchCount-1].team2) == 0 ||
+                strcmp(teams[team2].name, matches[matchCount-1].team1) == 0 || 
+                strcmp(teams[team2].name, matches[matchCount-1].team2) == 0) 
+                continue;
         }
-        memset(used, 0, sizeof(used));
+        
+        if (rand() % 2) {
+            sprintf(matches[matchCount].team1, "%s", teams[team1].name);
+            sprintf(matches[matchCount].team2, "%s", teams[team2].name);
+            sprintf(matches[matchCount].venue, "%s", teams[team1].homeVenue);
+        } else {
+            sprintf(matches[matchCount].team1, "%s", teams[team2].name);
+            sprintf(matches[matchCount].team2, "%s", teams[team1].name);
+            sprintf(matches[matchCount].venue, "%s", teams[team2].homeVenue);
+        }
+        
+        sprintf(matches[matchCount].date, "2025-%02d-%02d", month, day);
+        sprintf(matches[matchCount].time, (matchCount % 7 == 0) ? "3:30 PM" : "7:30 PM");
+        
+        pairs[team1][team2]++;
+        pairs[team2][team1]++;
+        matchCount++;
+        
+        if (++day > 30) {
+            day = 1;
+            month++;
+        }
     }
 }
 
-// Function to update points table and NRR
 void updatePointsTable(char winner[], char loser[], int runsWinner, int runsLoser) {
     for (int i = 0; i < MAX_TEAMS; i++) {
         if (strcmp(points[i].team, winner) == 0) {
+            points[i].matchesPlayed++;
             points[i].wins++;
             points[i].points += 2;
             points[i].runsScored += runsWinner;
             points[i].runsConceded += runsLoser;
-        } else if (strcmp(points[i].team, loser) == 0) {
+        } 
+        if (strcmp(points[i].team, loser) == 0) {
+            points[i].matchesPlayed++;
             points[i].losses++;
             points[i].runsScored += runsLoser;
             points[i].runsConceded += runsWinner;
         }
-        points[i].matchesPlayed++;
     }
 }
-
-// Function to calculate Net Run Rate (NRR)
 void calculateNRR() {
     for (int i = 0; i < MAX_TEAMS; i++) {
         if (points[i].matchesPlayed > 0) {
-            points[i].netRunRate = (float)(points[i].runsScored - points[i].runsConceded) / points[i].matchesPlayed;
+            float overs = points[i].matchesPlayed * 20.0;
+            points[i].netRunRate = ((float)points[i].runsScored/overs) - ((float)points[i].runsConceded/overs);
         }
     }
 }
 
-// Function to simulate matches
 void simulateMatches() {
     for (int i = 0; i < matchCount; i++) {
-        int winnerIndex = rand() % 2;
         char winner[20], loser[20];
+        int runs1 = 120 + rand() % 80;
+        int runs2 = 120 + rand() % 80;
 
-        // Generate random runs scored for both teams
-        int runs1 = 120 + rand() % 80;  // Between 120 and 200
-        int runs2 = 120 + rand() % 80;  // Between 120 and 200
-
-        if (winnerIndex == 0) {
+        if (runs1 >= runs2) {
             strcpy(winner, matches[i].team1);
             strcpy(loser, matches[i].team2);
         } else {
@@ -139,16 +129,11 @@ void simulateMatches() {
             runs1 = runs2;
             runs2 = temp;
         }
-
         updatePointsTable(winner, loser, runs1, runs2);
     }
-
     calculateNRR();
 }
-
-// Function to display points table (sorted by points and NRR)
 void displayPointsTable() {
-    // Sort teams by points first, then by NRR
     for (int i = 0; i < MAX_TEAMS - 1; i++) {
         for (int j = 0; j < MAX_TEAMS - i - 1; j++) {
             if (points[j].points < points[j + 1].points ||
@@ -163,12 +148,10 @@ void displayPointsTable() {
     printf("\n******** Final Points Table ********\n");
     printf("Team\tMP\tW\tL\tPts\tNRR\n");
     for (int i = 0; i < MAX_TEAMS; i++) {
-        printf("%s\t%d\t%d\t%d\t%d\t%.2f\n", points[i].team, points[i].wins+points[i].losses,
+        printf("%s\t%d\t%d\t%d\t%d\t%.2f\n", points[i].team, points[i].wins + points[i].losses,
                points[i].wins, points[i].losses, points[i].points, points[i].netRunRate);
     }
 }
-
-// Function to display match schedule
 void displaySchedule() {
     printf("\n******** IPL Match Schedule ********\n");
     for (int i = 0; i < matchCount; i++) {
@@ -182,10 +165,9 @@ int main() {
     srand(time(NULL));
     initializeTeams();
     generateSchedule();
+    printf("Total Matches Scheduled: %d\n", matchCount);
     displaySchedule();
-    
     simulateMatches(); 
     displayPointsTable(); 
-    
     return 0;
 }
