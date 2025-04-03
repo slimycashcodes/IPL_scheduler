@@ -54,38 +54,58 @@ void initializeTeams() {
 void generateSchedule() {
     int day = 1, month = 4;
     int pairs[MAX_TEAMS][MAX_TEAMS] = {0};
-    
+    int homeVenueUsed[MAX_TEAMS][MAX_TEAMS] = {0}; // Tracks home venue usage for fairness
+    int attempt = 0;
+
     while (matchCount < MAX_TEAMS * (MAX_TEAMS - 1)) {
         int team1 = rand() % MAX_TEAMS;
         int team2 = rand() % MAX_TEAMS;
+
         
-        if (team1 == team2 || pairs[team1][team2] >= 2) continue;
-        
+
+        // Ensure a team does not play itself
+        if (team1 == team2 || pairs[team1][team2] >= 2) {
+            attempt++;
+            continue;
+        }
+
+        // Ensure teams do not play consecutive matches
         if (matchCount > 0) {
             if (strcmp(teams[team1].name, matches[matchCount-1].team1) == 0 || 
                 strcmp(teams[team1].name, matches[matchCount-1].team2) == 0 ||
                 strcmp(teams[team2].name, matches[matchCount-1].team1) == 0 || 
                 strcmp(teams[team2].name, matches[matchCount-1].team2) == 0) 
+            {
+                attempt++;
                 continue;
+            }
         }
-        
-        if (rand() % 2) {
-            sprintf(matches[matchCount].team1, "%s", teams[team1].name);
-            sprintf(matches[matchCount].team2, "%s", teams[team2].name);
-            sprintf(matches[matchCount].venue, "%s", teams[team1].homeVenue);
+
+        // Decide the venue based on previous home venue selection
+        if (homeVenueUsed[team1][team2] == 0) {
+            // First match: play at team1's home
+            strcpy(matches[matchCount].team1, teams[team1].name);
+            strcpy(matches[matchCount].team2, teams[team2].name);
+            strcpy(matches[matchCount].venue, teams[team1].homeVenue);
+            homeVenueUsed[team1][team2] = 1;  // Mark that team1 hosted this match
         } else {
-            sprintf(matches[matchCount].team1, "%s", teams[team2].name);
-            sprintf(matches[matchCount].team2, "%s", teams[team1].name);
-            sprintf(matches[matchCount].venue, "%s", teams[team2].homeVenue);
+            // Second match: switch venue to team2's home
+            strcpy(matches[matchCount].team1, teams[team2].name);
+            strcpy(matches[matchCount].team2, teams[team1].name);
+            strcpy(matches[matchCount].venue, teams[team2].homeVenue);
+            homeVenueUsed[team1][team2] = 0;  // Reset for fairness
         }
-        
+
+        // Set match date and time
         sprintf(matches[matchCount].date, "2025-%02d-%02d", month, day);
         sprintf(matches[matchCount].time, (matchCount % 7 == 0) ? "3:30 PM" : "7:30 PM");
-        
+
+        // Update tracking
         pairs[team1][team2]++;
         pairs[team2][team1]++;
         matchCount++;
-        
+
+        // Advance the date
         if (++day > 30) {
             day = 1;
             month++;
@@ -176,7 +196,7 @@ void displayPointsTable() {
 void displaySchedule() {
     printf("\n******** IPL Match Schedule ********\n");
     for (int i = 0; i < matchCount; i++) {
-        printf("Match: %s vs %s | Date: %s | Time: %s | Venue: %s\n",
+        printf("%d Match: %s vs %s | Date: %s | Time: %s | Venue: %s\n", i+1,
                matches[i].team1, matches[i].team2, matches[i].date, matches[i].time, matches[i].venue);
     }
 }
@@ -190,8 +210,5 @@ int main() {
     displaySchedule();
     simulateMatches(); 
     displayPointsTable(); 
-    int i;
-    printf("Press 0 to stop .....");
-    scanf("%d",&i);
     return 0;
 }
