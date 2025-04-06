@@ -54,14 +54,11 @@ void generateSchedule() {
 
     while (matchCount < MAX_TEAMS * (MAX_TEAMS - 1)) {
         int team1 = rand() % MAX_TEAMS;
-        int team2 = rand() % MAX_TEAMS;
-
-        
+        int team2 = rand() % MAX_TEAMS;      
         if (team1 == team2 || pairs[team1][team2] >= 2) {
             attempt++;
             continue;
         }
-
         if (matchCount > 0) {
             if (strcmp(teams[team1].name, matches[matchCount-1].team1) == 0 || 
                 strcmp(teams[team1].name, matches[matchCount-1].team2) == 0 ||
@@ -85,6 +82,8 @@ void generateSchedule() {
             strcpy(matches[matchCount].venue, teams[team2].homeVenue);
             homeVenueUsed[team1][team2] = 0;  
         }
+ 
+        
 
         sprintf(matches[matchCount].date, "2025-%02d-%02d", month, day);
         if(matchCount%7==0){
@@ -178,17 +177,40 @@ void displayPointsTable() {
         printf("%s\t%d\t%d\t%d\t%d\t%.2f\n", points[i].team, points[i].wins + points[i].losses,
                points[i].wins, points[i].losses, points[i].points, points[i].netRunRate);
     }
-
-    real(toppers); 
+    printf("\n");
+    char user_choice;
+    printf("DO you want to simulate the playoffs(y/n):");
+    scanf(" %c",&user_choice);
+    if(user_choice=='y'){
+        real(toppers);
+    }   
+     
 }
 
 void displaySchedule() {
     printf("\n******** IPL Match Schedule ********\n");
     for (int i = 0; i < matchCount; i++) {
-        printf("%d Match: %s vs %s | Date: %s | Time: %s | Venue: %s\n", i+1,
+        if(i%7==0){
+            printf("\n");
+        }
+        printf("%2d Match: %4s vs %4s | Date: %s | Time: %s | Venue: %s\n", i+1,
                matches[i].team1, matches[i].team2, matches[i].date, matches[i].time, matches[i].venue);
     }
+    printf("\n");
 }
+
+
+void displayteamschedule(char team[]) {
+    printf("\n******** %s Team Specific Schedule ********\n",team);
+    for (int i = 0; i < matchCount; i++) {
+        if(strcmp(matches[i].team1,team)== 0 || strcmp(matches[i].team2,team)== 0){
+            printf("%2d Match: %4s vs %4s | Date: %s | Time: %s | Venue: %s\n", i+1,
+                matches[i].team1, matches[i].team2, matches[i].date, matches[i].time, matches[i].venue);
+        }
+    }
+    printf("\n");
+}
+
 
 int main() {
     srand(time(NULL));
@@ -196,6 +218,20 @@ int main() {
     generateSchedule();
     printf("Total Matches Scheduled: %d\n", matchCount);
     displaySchedule();
+
+    printf("Do you want to see any team's specific schedule(y/n): ");
+    char user_choice;
+    scanf("%c",&user_choice);
+    while(user_choice=='y'){
+        char user_team[5];
+        printf("Enter the teams short name in all caps:");
+        scanf("%s",user_team);
+        displayteamschedule(user_team); 
+        printf("Do you want to see any other team's specific schedule(y/n): ");
+        scanf(" %c",&user_choice);
+    }
+    
+    
     simulateMatches(); 
     displayPointsTable(); 
     return 0;
